@@ -44,7 +44,7 @@
 ;;; Emacs ;;;
 ;;;;;;;;;;;;;
 (setq inhibit-startup-message t
-      inhibit-startup-echo-area-message t)  
+      inhibit-startup-echo-area-message t)
 (menu-bar-mode -1)
 
 (setq backup-directory-alist
@@ -98,9 +98,7 @@
 
 ; General
 (evil-leader/set-key "d" (lambda () (interactive) (split-window-right) (other-window 1)))
-(evil-leader/set-key "i" 'eval-expression)
 (evil-leader/set-key "s" (lambda () (interactive) (split-window-below) (other-window 1)))
-(evil-leader/set-key "v" 'shell)
 (evil-leader/set-key "w" 'other-window)
 (evil-leader/set-key "x" 'kill-this-buffer)
 
@@ -108,9 +106,8 @@
 (evil-leader/set-key "b" 'projectile-dired)
 (evil-leader/set-key "e" 'projectile-find-file)
 (evil-leader/set-key "g" 'projectile-find-file-in-known-projects)
-; (evil-leader/set-key "r" 'projectile-switch-project)
+(evil-leader/set-key "v" 'projectile-switch-project)
 (evil-leader/set-key "t" 'projectile-find-file-other-window)
-(evil-leader/set-key "m" 'add-projectile-project)
 (evil-leader/set-key "n" 'projectile-remove-known-project)
 
 ; Scala
@@ -134,6 +131,10 @@
 ;;;;;;;;;;;;;;;;;;
 ;;; Projectile ;;;
 ;;;;;;;;;;;;;;;;;;
+(projectile-global-mode +1)
+
+(setq projectile-project-root-files-functions '(projectile-root-top-down projectile-root-bottom-up projectile-root-top-down projectile-root-top-down-recurring))
+
 (defun add-projectile-project (dir)
   (interactive (list (read-file-name "Add project root:")))
   (projectile-add-known-project dir)
