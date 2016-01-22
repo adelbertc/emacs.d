@@ -25,6 +25,7 @@
 (ensure-installed 'evil)
 (ensure-installed 'evil-leader)
 (ensure-installed 'linum)
+(ensure-installed 'markdown-mode)
 (ensure-installed 'projectile)
 (ensure-installed 'sbt-mode)
 (ensure-installed 'scala-mode2)
