@@ -26,6 +26,7 @@
 (ensure-installed 'evil-leader)
 (ensure-installed 'linum)
 (ensure-installed 'markdown-mode)
+(ensure-installed 'mmm-mode)
 (ensure-installed 'projectile)
 (ensure-installed 'sbt-mode)
 (ensure-installed 'scala-mode2)
@@ -44,6 +45,12 @@
 ;;;;;;;;;;;;;
 ;;; Emacs ;;;
 ;;;;;;;;;;;;;
+(tool-bar-mode 0)
+(menu-bar-mode 0)
+(toggle-frame-fullscreen)
+(scroll-bar-mode 0)
+(fset `yes-or-no-p `y-or-n-p)
+
 (setq inhibit-startup-message t
       inhibit-startup-echo-area-message t)
 (menu-bar-mode -1)
@@ -102,6 +109,7 @@
 (evil-leader/set-key "s" (lambda () (interactive) (split-window-below) (other-window 1)))
 (evil-leader/set-key "w" 'other-window)
 (evil-leader/set-key "x" 'kill-this-buffer)
+(evil-leader/set-key "l" 'shell)
 
 ; Projectile
 (evil-leader/set-key "b" 'projectile-dired)
@@ -115,7 +123,6 @@
 ; Start SBT in a buffer and switch back to original
 (evil-leader/set-key "p" (lambda () (interactive) (sbt-start) (previous-buffer)))
 ; Hack to stop current SBT command in evil-mode
-(evil-leader/set-key "l" (lambda () (interactive) (sbt-command "") (other-window 1)))
 (evil-leader/set-key "r" 'previous-error)
 (evil-leader/set-key "f" 'next-error)
 (evil-leader/set-key "c" 'toggle-sbt)
@@ -128,6 +135,21 @@
 ; Let electric-pair do it's job
 (define-key evil-insert-state-map [remap newline] nil)
 (define-key evil-insert-state-map [remap newline-and-indent] nil)
+
+; ;;;;;;;;;;;;;;;;
+; ;;; mmm-mode ;;;
+; ;;;;;;;;;;;;;;;;
+; (require 'mmm-mode)
+; 
+; (mmm-add-classes
+;  '((markdown-scala
+;     :submode scala-mode2
+;     :face mmm-declaration-submode-face
+;     :front "^```tut[\n\r]+"
+;     :back "^```$")))
+; 
+; (setq mmm-global-mode 't)
+; (mmm-add-mode-ext-class 'markdown-mode nil 'markdown-scala)
 
 ;;;;;;;;;;;;;;;;;;
 ;;; Projectile ;;;
@@ -147,6 +169,12 @@
 ;;;;;;;;;;;;;
 (require 'scala-mode2)
 (require 'sbt-mode)
+
+(substitute-key-definition
+ ;; allows using SPACE when in the minibuffer
+ 'minibuffer-complete-word
+ 'self-insert-command
+ minibuffer-local-completion-map)
 
 (add-hook 'sbt-mode-hook'(lambda ()
     (add-hook 'after-save-hook 'sbt-run-previous-command)
