@@ -39,19 +39,23 @@
     (set-face-background 'linum "black")
     (set-face-foreground 'linum "brightgreen")))
 
-;;;;;;;;;;;;;;
-;;; Comint ;;;
-;;;;;;;;;;;;;;
-; Turn off shell echo
-;(use-package comint
-;  :config
-;  (progn
-;    (add-hook 'comint-mode-hook 'no-shell-echo)
-;    (define-key comint-mode-map (kbd "<up>") 'comint-previous-input)
-;    (define-key comint-mode-map (kbd "<down>") 'comint-next-input)
-;    ))
-
-(defun no-shell-echo () (setq comint-process-echoes t))
+;;;;;;;;;;;;;;;;;;;;
+;;; company-mode ;;;
+;;;;;;;;;;;;;;;;;;;;
+(use-package company
+  :diminish company-mode
+  :commands company-mode
+  :init
+  (setq
+   company-dabbrev-ignore-case nil
+   company-dabbrev-code-ignore-case nil
+   company-dabbrev-downcase nil
+   company-idle-delay 0
+   company-minimum-prefix-length 4)
+  :config
+  (add-hook 'after-init-hook 'global-company-mode)
+  ;; disables TAB in company-mode, freeing it for yasnippet
+  (define-key company-active-map [tab] nil))
 
 ;;;;;;;;;;;;;
 ;;; Emacs ;;;
@@ -85,13 +89,6 @@
 (fset 'yes-or-no-p 'y-or-n-p)
 (show-paren-mode 1)
 
-;;;;;;;;;;;;;;;;;;;;;
-;;; auto-complete ;;;
-;;;;;;;;;;;;;;;;;;;;;
-(use-package auto-complete
-  :config
-  (ac-config-default))
-
 ;;;;;;;;;;;;;;;;;
 ;;; evil-mode ;;;
 ;;;;;;;;;;;;;;;;;
@@ -114,15 +111,11 @@
    (evil-leader/set-key "d" (lambda () (interactive) (split-window-right) (other-window 1)))
    (evil-leader/set-key "s" (lambda () (interactive) (split-window-below) (other-window 1)))
    (evil-leader/set-key "w" 'other-window)
-   (evil-leader/set-key "x" 'kill-this-buffer)
-   (evil-leader/set-key "l" 'shell)
    ; Projectile
    (evil-leader/set-key "b" 'projectile-dired)
    (evil-leader/set-key "e" 'projectile-find-file)
    (evil-leader/set-key "g" 'projectile-find-file-in-known-projects)
    (evil-leader/set-key "v" 'projectile-switch-project)
-   (evil-leader/set-key "t" 'projectile-find-file-other-window)
-   (evil-leader/set-key "n" 'projectile-remove-known-project)
    ; Scala
    (evil-leader/set-key "p" (lambda () (interactive) (sbt-start) (previous-buffer)))
    (evil-leader/set-key "r" 'previous-error)
@@ -136,7 +129,7 @@
 (use-package projectile
   :config
   (progn
-    (projectile-global-mode +1)
+    (projectile-global-mode t)
     (setq projectile-project-root-files-functions '(projectile-root-top-down projectile-root-bottom-up projectile-root-top-down projectile-root-top-down-recurring))))
 
 ;;;;;;;;;;;;;
@@ -145,6 +138,10 @@
 (use-package scala-mode2
   :config
   (progn
+    (setq scala-indent:align-forms t)
+    (setq scala-indent:align-parameters t)
+    (setq scala-indent:indent-value-expression t)
+
     (set-face-attribute font-lock-constant-face t        :foreground "red")
     (set-face-attribute font-lock-doc-face t             :foreground "brightgreen" :slant 'italic)
     (set-face-attribute scala-font-lock:implicit-face t  :foreground "magenta")
@@ -155,6 +152,7 @@
     (set-face-attribute scala-font-lock:private-face t   :foreground modifier-color)
     (set-face-attribute scala-font-lock:protected-face t :foreground modifier-color)
     (set-face-attribute scala-font-lock:sealed-face t    :foreground modifier-color)))
+
 
 (use-package sbt-mode
   :config
@@ -169,7 +167,7 @@
 (defun sbt-buffer () (get-buffer (sbt:buffer-name)))
 
 (defun sbt-prev-on-save ()
-  add-hook 'after-save-hook sbt-run-previous-command)
+  (add-hook 'after-save-hook 'sbt-run-previous-command))
 
 (defun switch-sbt-project (proj)
   (interactive (list (read-string "Switch to project: ")))
