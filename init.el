@@ -1,184 +1,180 @@
 ;;;;;;;;;;;;;;;
 ;;; Package ;;;
 ;;;;;;;;;;;;;;;
+; (push '("marmalade" . "https://marmalade-repo.org/packages/")
+;       package-archives)
+
 (require 'package)
+(setq
+ use-package-always-ensure t
+ package-archives '(("gnu"   . "http://elpa.gnu.org/packages/")
+                    ("org"   . "http://orgmode.org/elpa/")
+                    ("melpa" . "http://melpa.org/packages/")))
+
 (package-initialize)
-(push '("marmalade" . "https://marmalade-repo.org/packages/")
-      package-archives)
-(push '("melpa" . "http://melpa.milkbox.net/packages/")
-      package-archives)
-(push '("gnu" . "http://elpa.gnu.org/packages/")
-      package-archives)
-
 (when (not package-archive-contents)
-  (package-refresh-contents))
+  (package-refresh-contents)
+  (package-install 'use-package))
+(require 'use-package)
 
-(defun ensure-installed (p)
-  (when (not (package-installed-p p))
-    (package-install p)))
-
-;;;;;;;;;;;;;;;;
-;;; Requires ;;;
-;;;;;;;;;;;;;;;;
-(ensure-installed 'auto-complete)
-(ensure-installed 'color-theme-solarized)
-(ensure-installed 'evil)
-(ensure-installed 'evil-leader)
-(ensure-installed 'linum)
-(ensure-installed 'markdown-mode)
-(ensure-installed 'mmm-mode)
-(ensure-installed 'projectile)
-(ensure-installed 'sbt-mode)
-(ensure-installed 'scala-mode2)
+;;;;;;;;;;;;;;;;;;;;;
+;;; Misc packages ;;;
+;;;;;;;;;;;;;;;;;;;;;
+(use-package markdown-mode)
 
 ;;;;;;;;;;;;;;
 ;;; Colors ;;;
 ;;;;;;;;;;;;;;
-(global-linum-mode 1)
-(set-terminal-parameter nil 'background-mode 'dark)
-(load-theme 'solarized t)
+(use-package color-theme)
+(use-package color-theme-solarized
+  :config
+  (load-theme 'solarized t)
+  (set-terminal-parameter nil 'background-mode 'dark)
+  (setq frame-background-mode (quote dark)))
 
-(setq frame-background-mode (quote dark))
-(set-face-background 'linum "black")
-(set-face-foreground 'linum "brightgreen")
+(use-package linum
+  :config
+  (progn
+    (global-linum-mode 1)
+    (set-face-background 'linum "black")
+    (set-face-foreground 'linum "brightgreen")))
+
+;;;;;;;;;;;;;;
+;;; Comint ;;;
+;;;;;;;;;;;;;;
+; Turn off shell echo
+;(use-package comint
+;  :config
+;  (progn
+;    (add-hook 'comint-mode-hook 'no-shell-echo)
+;    (define-key comint-mode-map (kbd "<up>") 'comint-previous-input)
+;    (define-key comint-mode-map (kbd "<down>") 'comint-next-input)
+;    ))
+
+(defun no-shell-echo () (setq comint-process-echoes t))
 
 ;;;;;;;;;;;;;
 ;;; Emacs ;;;
 ;;;;;;;;;;;;;
-(tool-bar-mode 0)
-(menu-bar-mode 0)
-(toggle-frame-fullscreen)
-(scroll-bar-mode 0)
-(fset `yes-or-no-p `y-or-n-p)
+(setq
+ auto-save-file-name-transforms `((".*" ,temporary-file-directory t))
+ backup-directory-alist `((".*" . ,temporary-file-directory))
+ column-number-mode t
+ inhibit-startup-message t
+ inhibit-startup-echo-area-message t
+ linum-format 'format-linum)
 
-(setq inhibit-startup-message t
-      inhibit-startup-echo-area-message t)
-(menu-bar-mode -1)
+(setq-default
+ indent-tabs-mode nil)
 
-(setq backup-directory-alist
-      `((".*" . ,temporary-file-directory)))
-(setq auto-save-file-name-transforms
-      `((".*" ,temporary-file-directory t)))
-
-; Indent on newline
 (define-key global-map (kbd "RET") 'newline-and-indent)
-
-; Spaces not tabs
-(setq-default indent-tabs-mode nil)
-
-(setq linum-format 'format-linum)
+(fset `yes-or-no-p `y-or-n-p)
+(menu-bar-mode -1)
 
 ; Format linum padding - count # of characters in the # of lines and pad
 (defun format-linum (line)
-  (propertize (format
-                (let
-                  ((w (length (number-to-string (count-lines (point-min) (point-max))))))
-                  (concat "%" (number-to-string w) "d "))
-                line)
-              'face 'linum))
+  (propertize
+   (format
+    (let ((w (length (number-to-string (count-lines (point-min) (point-max))))))
+      (concat "%" (number-to-string w) "d "))
+    line)
+   'face 'linum))
 
+(electric-indent-mode 0)
 (electric-pair-mode 1)
-(show-paren-mode 1)
-
-; Turn off shell echo
-(require 'comint)
-(defun no-shell-echo () (setq comint-process-echoes t))
-(add-hook 'comint-mode-hook 'no-shell-echo)
-
-(define-key comint-mode-map (kbd "<up>") 'comint-previous-input)
-(define-key comint-mode-map (kbd "<down>") 'comint-next-input)
-
-; y/n instead of yes/no
 (fset 'yes-or-no-p 'y-or-n-p)
+(show-paren-mode 1)
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;;; auto-complete ;;;
 ;;;;;;;;;;;;;;;;;;;;;
-(ac-config-default)
+(use-package auto-complete
+  :config
+  (ac-config-default))
 
 ;;;;;;;;;;;;;;;;;
 ;;; evil-mode ;;;
 ;;;;;;;;;;;;;;;;;
-(setq evil-want-C-u-scroll t)
-(ensure-installed 'evil)
-(global-evil-leader-mode)
-(evil-leader/set-leader ",")
+(use-package evil
+  :init
+  (setq evil-want-C-u-scroll t)
+  :config
+  (progn
+    (evil-mode t)
+    ; Let electric-pair do it's job
+    (define-key evil-insert-state-map [remap newline] nil)
+    (define-key evil-insert-state-map [remap newline-and-indent] nil)))
 
-; General
-(evil-leader/set-key "d" (lambda () (interactive) (split-window-right) (other-window 1)))
-(evil-leader/set-key "s" (lambda () (interactive) (split-window-below) (other-window 1)))
-(evil-leader/set-key "w" 'other-window)
-(evil-leader/set-key "x" 'kill-this-buffer)
-(evil-leader/set-key "l" 'shell)
-
-; Projectile
-(evil-leader/set-key "b" 'projectile-dired)
-(evil-leader/set-key "e" 'projectile-find-file)
-(evil-leader/set-key "g" 'projectile-find-file-in-known-projects)
-(evil-leader/set-key "v" 'projectile-switch-project)
-(evil-leader/set-key "t" 'projectile-find-file-other-window)
-(evil-leader/set-key "n" 'projectile-remove-known-project)
-
-; Scala
-; Start SBT in a buffer and switch back to original
-(evil-leader/set-key "p" (lambda () (interactive) (sbt-start) (previous-buffer)))
-; Hack to stop current SBT command in evil-mode
-(evil-leader/set-key "r" 'previous-error)
-(evil-leader/set-key "f" 'next-error)
-(evil-leader/set-key "c" 'toggle-sbt)
-(evil-leader/set-key "q" 'sbt-command)
-; (evil-leader/set-key "v" (lambda () (interactive) (sbt-command "compile")))
-; (evil-leader/set-key "q" 'switch-sbt-project)
-
-(evil-mode t)
-
-; Let electric-pair do it's job
-(define-key evil-insert-state-map [remap newline] nil)
-(define-key evil-insert-state-map [remap newline-and-indent] nil)
-
-; ;;;;;;;;;;;;;;;;
-; ;;; mmm-mode ;;;
-; ;;;;;;;;;;;;;;;;
-; (require 'mmm-mode)
-; 
-; (mmm-add-classes
-;  '((markdown-scala
-;     :submode scala-mode2
-;     :face mmm-declaration-submode-face
-;     :front "^```tut[\n\r]+"
-;     :back "^```$")))
-; 
-; (setq mmm-global-mode 't)
-; (mmm-add-mode-ext-class 'markdown-mode nil 'markdown-scala)
+(use-package evil-leader
+  :config
+  (progn
+   (global-evil-leader-mode)
+   (evil-leader/set-leader ",")
+   ; General
+   (evil-leader/set-key "d" (lambda () (interactive) (split-window-right) (other-window 1)))
+   (evil-leader/set-key "s" (lambda () (interactive) (split-window-below) (other-window 1)))
+   (evil-leader/set-key "w" 'other-window)
+   (evil-leader/set-key "x" 'kill-this-buffer)
+   (evil-leader/set-key "l" 'shell)
+   ; Projectile
+   (evil-leader/set-key "b" 'projectile-dired)
+   (evil-leader/set-key "e" 'projectile-find-file)
+   (evil-leader/set-key "g" 'projectile-find-file-in-known-projects)
+   (evil-leader/set-key "v" 'projectile-switch-project)
+   (evil-leader/set-key "t" 'projectile-find-file-other-window)
+   (evil-leader/set-key "n" 'projectile-remove-known-project)
+   ; Scala
+   (evil-leader/set-key "p" (lambda () (interactive) (sbt-start) (previous-buffer)))
+   (evil-leader/set-key "r" 'previous-error)
+   (evil-leader/set-key "f" 'next-error)
+   (evil-leader/set-key "c" 'toggle-sbt)
+   (evil-leader/set-key "q" 'sbt-command)))
 
 ;;;;;;;;;;;;;;;;;;
 ;;; Projectile ;;;
 ;;;;;;;;;;;;;;;;;;
-(projectile-global-mode +1)
-
-(setq projectile-project-root-files-functions '(projectile-root-top-down projectile-root-bottom-up projectile-root-top-down projectile-root-top-down-recurring))
-
-(defun add-projectile-project (dir)
-  (interactive (list (read-file-name "Add project root:")))
-  (projectile-add-known-project dir)
-  (projectile-merge-known-projects)
-  (message "Project %s added to the list of known projects." dir))
+(use-package projectile
+  :config
+  (progn
+    (projectile-global-mode +1)
+    (setq projectile-project-root-files-functions '(projectile-root-top-down projectile-root-bottom-up projectile-root-top-down projectile-root-top-down-recurring))))
 
 ;;;;;;;;;;;;;
 ;;; Scala ;;;
 ;;;;;;;;;;;;;
-(require 'scala-mode2)
-(require 'sbt-mode)
+(use-package scala-mode2
+  :config
+  (progn
+    (set-face-attribute font-lock-constant-face t        :foreground "red")
+    (set-face-attribute font-lock-doc-face t             :foreground "brightgreen" :slant 'italic)
+    (set-face-attribute scala-font-lock:implicit-face t  :foreground "magenta")
+    (set-face-attribute scala-font-lock:override-face t  :foreground "color-52")
+    (setq modifier-color "brightred")
+    (set-face-attribute scala-font-lock:final-face t     :foreground modifier-color)
+    (set-face-attribute scala-font-lock:lazy-face t      :foreground modifier-color)
+    (set-face-attribute scala-font-lock:private-face t   :foreground modifier-color)
+    (set-face-attribute scala-font-lock:protected-face t :foreground modifier-color)
+    (set-face-attribute scala-font-lock:sealed-face t    :foreground modifier-color)))
 
-(substitute-key-definition
- ;; allows using SPACE when in the minibuffer
- 'minibuffer-complete-word
- 'self-insert-command
- minibuffer-local-completion-map)
+(use-package sbt-mode
+  :config
+  (progn
+    (substitute-key-definition
+     'minibuffer-complete-word
+     'self-insert-command
+     minibuffer-local-completion-map)
 
-(add-hook 'sbt-mode-hook'(lambda ()
-    (add-hook 'after-save-hook 'sbt-run-previous-command)
-))
+    (add-hook 'sbt-mode-hook 'sbt-prev-on-save)))
+
+(defun sbt-buffer () (get-buffer (sbt:buffer-name)))
+
+(defun sbt-prev-on-save ()
+  add-hook 'after-save-hook sbt-run-previous-command)
+
+(defun switch-sbt-project (proj)
+  (interactive (list (read-string "Switch to project: ")))
+  (sbt-command (concat "project " proj))
+  (message (concat "Switched to project " proj)))
 
 (defun toggle-sbt ()
   (interactive)
@@ -195,21 +191,3 @@
           (other-window -1))
         ))
 
-(defun sbt-buffer () (get-buffer (sbt:buffer-name)))
-
-(defun switch-sbt-project (proj)
-  (interactive (list (read-string "Switch to project: ")))
-  (sbt-command (concat "project " proj))
-  (message (concat "Switched to project " proj)))
-
-(set-face-attribute font-lock-constant-face t        :foreground "red")
-(set-face-attribute font-lock-doc-face t             :foreground "brightgreen" :slant 'italic)
-(set-face-attribute scala-font-lock:implicit-face t  :foreground "magenta")
-(set-face-attribute scala-font-lock:override-face t  :foreground "color-52")
-
-(setq modifier-color "brightred")
-(set-face-attribute scala-font-lock:final-face t     :foreground modifier-color)
-(set-face-attribute scala-font-lock:lazy-face t      :foreground modifier-color)
-(set-face-attribute scala-font-lock:private-face t   :foreground modifier-color)
-(set-face-attribute scala-font-lock:protected-face t :foreground modifier-color)
-(set-face-attribute scala-font-lock:sealed-face t    :foreground modifier-color)
