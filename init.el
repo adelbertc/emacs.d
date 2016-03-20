@@ -28,9 +28,10 @@
 (use-package color-theme)
 (use-package color-theme-solarized
   :config
-  (load-theme 'solarized t)
-  (set-terminal-parameter nil 'background-mode 'dark)
-  (setq frame-background-mode (quote dark)))
+  (progn
+    (load-theme 'solarized t)
+    (set-terminal-parameter nil 'background-mode 'dark)
+    (setq frame-background-mode (quote dark))))
 
 (use-package linum
   :config
