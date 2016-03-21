@@ -53,8 +53,8 @@
    company-dabbrev-downcase nil
    company-idle-delay 0
    company-minimum-prefix-length 4)
-  :config
   (add-hook 'after-init-hook 'global-company-mode)
+  :config
   ;; disables TAB in company-mode, freeing it for yasnippet
   (define-key company-active-map [tab] nil))
 
