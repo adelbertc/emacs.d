@@ -85,7 +85,7 @@
     line)
    'face 'linum))
 
-(electric-indent-mode 0)
+; (electric-indent-mode 0)
 (electric-pair-mode 1)
 (fset 'yes-or-no-p 'y-or-n-p)
 (show-paren-mode 1)
